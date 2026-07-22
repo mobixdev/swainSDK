@@ -79,6 +79,38 @@ def test_main_returns_interrupt_code_on_abort(monkeypatch):
     assert cli.main(["--help"]) == constants.EXIT_CODE_INTERRUPT
 
 
+def test_main_propagates_command_exit_code(monkeypatch):
+    class FakeCommand:
+        def main(self, *args, **kwargs):
+            return constants.EXIT_CODE_SUBPROCESS
+
+    monkeypatch.setattr(cli.typer.main, "get_command", lambda _app: FakeCommand())
+    assert cli.main(["gen"]) == constants.EXIT_CODE_SUBPROCESS
+
+
+def test_main_propagates_gen_handler_exit_code(monkeypatch, tmp_path):
+    schema = tmp_path / "schema.json"
+    schema.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv(constants.CONFIG_ENV_VAR, str(tmp_path / "config.toml"))
+    monkeypatch.setattr(
+        cli,
+        "handle_gen",
+        lambda args, ctx=None: constants.EXIT_CODE_SUBPROCESS,
+    )
+
+    assert cli.main(
+        [
+            "gen",
+            "--schema",
+            str(schema),
+            "--lang",
+            "dart",
+            "--out",
+            str(tmp_path / "sdk"),
+        ]
+    ) == constants.EXIT_CODE_SUBPROCESS
+
+
 def test_cli_interactive_accepts_java_opt_and_generator_args(monkeypatch):
     captured: Dict[str, Any] = {}
 

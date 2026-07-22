@@ -1428,7 +1428,7 @@ def engine_use_embedded() -> None:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     command = typer.main.get_command(app)
     try:
-        command.main(
+        result = command.main(
             args=list(argv) if argv is not None else None,
             prog_name="swain_cli",
             standalone_mode=False,
@@ -1438,7 +1438,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return EXIT_CODE_INTERRUPT
     except SystemExit as exc:
         return int(exc.code or 0)
-    return 0
+    return result if isinstance(result, int) else 0
 
 
 if __name__ == "__main__":
